@@ -334,6 +334,9 @@ func initialize(c echo.Context) error {
 		}
 	}
 
+	invalidationLowPricedEstates()
+	invalidationLowPricedChairs()
+
 	return c.JSON(http.StatusOK, InitializeResponse{
 		Language: "go",
 	})
@@ -361,8 +364,6 @@ func getChairDetail(c echo.Context) error {
 		c.Echo().Logger.Infof("requested id's chair is sold out : %v", id)
 		return c.NoContent(http.StatusNotFound)
 	}
-	invalidationLowPricedEstates()
-	invalidationLowPricedChairs()
 
 	return c.JSON(http.StatusOK, chair)
 }
@@ -665,12 +666,20 @@ func getChairSearchCondition(c echo.Context) error {
 
 var lowPricedChairs []Chair
 var lowPricedChairsLock = new(sync.Mutex)
+var lowPricedMaxPrice int64
 
 func invalidationLowPricedChairs() {
 	lowPricedChairsLock.Lock()
 	lowPricedChairs = nil
 	lowPricedChairsLock.Unlock()
 }
+
+// func invalidationLowPricedChairsFromPrice(price int64) {
+// 	if price > lowPricedMaxPrice {
+// 		return
+// 	}
+// 	invalidationLowPricedChairs()
+// }
 
 func getLowPricedChair(c echo.Context) error {
 	if lowPricedChairs != nil || len(lowPricedChairs) > 0 {
@@ -694,6 +703,7 @@ func getLowPricedChair(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	lowPricedChairs = chairs
+	lowPricedMaxPrice = chairs[len(chairs)-1].Price
 	return c.JSON(http.StatusOK, ChairListResponse{Chairs: chairs})
 }
 
