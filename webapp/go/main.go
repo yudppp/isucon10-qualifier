@@ -19,9 +19,6 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
-	"github.com/newrelic/go-agent/v3/integrations/nrecho-v3"
-	_ "github.com/newrelic/go-agent/v3/integrations/nrmysql"
-	"github.com/newrelic/go-agent/v3/newrelic"
 )
 
 const Limit = 20
@@ -230,7 +227,7 @@ func getEnv(key, defaultValue string) string {
 //ConnectDB isuumoデータベースに接続する
 func (mc *MySQLConnectionEnv) ConnectDB() (*sqlx.DB, error) {
 	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v", mc.User, mc.Password, mc.Host, mc.Port, mc.DBName)
-	return sqlx.Open("nrmysql", dsn)
+	return sqlx.Open("mysql", dsn)
 }
 
 func init() {
@@ -250,22 +247,12 @@ func init() {
 }
 
 func main() {
-
-	app, err := newrelic.NewApplication(
-		newrelic.ConfigAppName("isucon10-qualifier"),
-		newrelic.ConfigLicense("66a9360acdf0399f0b249cdd9a6f517861a1NRAL"),
-		newrelic.ConfigDistributedTracerEnabled(true),
-	)
-	if err != nil {
-		panic(err)
-	}
 	// Echo instance
 	e := echo.New()
 	e.Debug = true
 	e.Logger.SetLevel(log.DEBUG)
 
 	// Middleware
-	e.Use(nrecho.Middleware(app))
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
