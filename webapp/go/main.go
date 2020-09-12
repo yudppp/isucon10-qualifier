@@ -606,6 +606,8 @@ func searchChairs(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
+var buyLock = new(sync.Mutex)
+
 func buyChair(c echo.Context) error {
 	ctx := c.Request().Context()
 	m := echo.Map{}
@@ -634,7 +636,9 @@ func buyChair(c echo.Context) error {
 	defer tx.Rollback()
 
 	var chair Chair
-	err = tx.QueryRowxContext(ctx, "SELECT * FROM chair WHERE id = ? AND stock > 0 FOR UPDATE", id).StructScan(&chair)
+	buyLock.Lock()
+	defer buyLock.Unlock()
+	err = tx.QueryRowxContext(ctx, "SELECT * FROM chair WHERE id = ? AND stock > 0", id).StructScan(&chair)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.Echo().Logger.Infof("buyChair chair id \"%v\" not found", id)
