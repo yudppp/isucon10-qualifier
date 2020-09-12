@@ -540,10 +540,17 @@ func searchChairs(c echo.Context) error {
 	}
 
 	if c.QueryParam("features") != "" {
-		for _, f := range strings.Split(c.QueryParam("features"), ",") {
-			conditions = append(conditions, "features LIKE CONCAT('%', ?, '%')")
-			params = append(params, f)
+		featuresQuery := "exists ( select 1 from chair_features ef where cf.feature_id in ("
+		for i, f := range strings.Split(c.QueryParam("features"), ",") {
+			if i == 0 {
+				featuresQuery += "?"
+			} else {
+				featuresQuery += ",?"
+			}
+			params = append(params, estateFeaturesMap[f])
 		}
+		featuresQuery += "))"
+		conditions = append(conditions, featuresQuery)
 	}
 
 	if len(conditions) == 0 {
@@ -858,7 +865,7 @@ func searchEstates(c echo.Context) error {
 			}
 			params = append(params, estateFeaturesMap[f])
 		}
-		featuresQuery += ")"
+		featuresQuery += "))"
 		conditions = append(conditions, featuresQuery)
 	}
 
