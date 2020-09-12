@@ -446,7 +446,7 @@ func postChair(c echo.Context) error {
 				featuresQuery += ","
 			}
 			featuresQuery += "(?,?)"
-			featuresArgs = append(featuresArgs, []interface{}{id, f}...)
+			featuresArgs = append(featuresArgs, []interface{}{id, chairFeaturesMap[f]}...)
 		}
 	}
 	if baseChairQuery != chairQuery {
