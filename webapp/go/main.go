@@ -550,7 +550,7 @@ func searchChairs(c echo.Context) error {
 	}
 
 	if c.QueryParam("features") != "" {
-		featuresQuery := "exists ( select 1 from chair_features cf where id = cf.chair_id and cf.feature_id in ("
+		featuresQuery := "id in ( select cf.chair_id from chair_features cf where cf.feature_id in ("
 		for i, f := range strings.Split(c.QueryParam("features"), ",") {
 			if i == 0 {
 				featuresQuery += "?"
@@ -882,7 +882,7 @@ func searchEstates(c echo.Context) error {
 	}
 
 	if c.QueryParam("features") != "" {
-		featuresQuery := "exists ( select 1 from estate_features ef where id = ef.estate_id and ef.feature_id in ("
+		featuresQuery := "id in ( select ef.estate_id from estate_features ef where ef.feature_id in ("
 		for i, f := range strings.Split(c.QueryParam("features"), ",") {
 			if i == 0 {
 				featuresQuery += "?"
