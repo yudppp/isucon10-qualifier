@@ -430,6 +430,9 @@ func postChair(c echo.Context) error {
 			return c.NoContent(http.StatusBadRequest)
 		}
 
+		if features == "" {
+			continue
+		}
 		featuresSlice := strings.Split(features, ",")
 		for _, f := range featuresSlice {
 			if baseFeaturesQuery != featuresQuery {
@@ -777,6 +780,9 @@ func postEstate(c echo.Context) error {
 			return c.NoContent(http.StatusBadRequest)
 		}
 
+		if features == "" {
+			continue
+		}
 		featuresSlice := strings.Split(features, ",")
 		for _, f := range featuresSlice {
 			if baseFeaturesQuery != featuresQuery {
