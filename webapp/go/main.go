@@ -484,7 +484,7 @@ func searchChairs(c echo.Context) error {
 
 	if c.QueryParam("features") != "" {
 		for i, f := range strings.Split(c.QueryParam("features"), ",") {
-			join += fmt.Sprintf("inner join (select 1 from chair_features cf%d on id = cf%d.chair_id and cf%d.feature_id = ?) j%d ", i, i, i, i)
+			join += fmt.Sprintf("inner join chair_features cf%d on id = cf%d.chair_id and cf%d.feature_id = ? ", i, i, i)
 			params = append(params, chairFeaturesMap[f])
 		}
 	}
@@ -857,7 +857,7 @@ func searchEstates(c echo.Context) error {
 
 	if c.QueryParam("features") != "" {
 		for i, f := range strings.Split(c.QueryParam("features"), ",") {
-			join += fmt.Sprintf("inner join (select 1 from estate_features ef%d on id = ef%d.estate_id and ef%d.feature_id = ?) j%d ", i, i, i, i)
+			join += fmt.Sprintf("inner join estate_features ef%d on id = ef%d.estate_id and ef%d.feature_id = ? ", i, i, i)
 			params = append(params, estateFeaturesMap[f])
 		}
 	}
