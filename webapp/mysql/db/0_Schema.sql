@@ -53,3 +53,5 @@ CREATE TABLE isuumo.estate_features
     feature_id  INTEGER         NOT NULL
 );
 CREATE UNIQUE INDEX estate_features_fe ON isuumo.estate_features (feature_id, estate_id);
+
+CREATE INDEX estate_door_heightx_door_width ON isuumo.estate (door_height, door_width);
