@@ -36,3 +36,18 @@ CREATE TABLE isuumo.chair
     popularity  INTEGER         NOT NULL,
     stock       INTEGER         NOT NULL
 );
+
+
+CREATE TABLE isuumo.chair_features
+(
+    chair_id    INTEGER         NOT NULL,
+    feature_id  INTEGER         NOT NULL,
+);
+CREATE INDEX chair_features_fc ON chair_features (feature_id, chair_id)
+
+CREATE TABLE isuumo.estate_features
+(
+    estate_id   INTEGER         NOT NULL,
+    feature_id  INTEGER         NOT NULL,
+);
+CREATE INDEX chair_features_fe ON estate_features (feature_id, estate_id)
