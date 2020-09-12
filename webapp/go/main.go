@@ -561,7 +561,7 @@ func searchChairs(c echo.Context) error {
 		params = append(params, c.QueryParam("color"))
 	}
 
-	if len(conditions) == 0 {
+	if join == "" && len(conditions) == 0 {
 		c.Echo().Logger.Infof("Search condition not found")
 		return c.NoContent(http.StatusBadRequest)
 	}
@@ -907,7 +907,7 @@ func searchEstates(c echo.Context) error {
 		}
 	}
 
-	if len(conditions) == 0 {
+	if join == "" && len(conditions) == 0 {
 		c.Echo().Logger.Infof("searchEstates search condition not found")
 		return c.NoContent(http.StatusBadRequest)
 	}
@@ -926,7 +926,10 @@ func searchEstates(c echo.Context) error {
 
 	searchQuery := fmt.Sprintf("SELECT * FROM estate %sWHERE ", join)
 	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM estate %sWHERE ", join)
-	searchCondition := strings.Join(conditions, " AND ")
+	var searchCondition string
+	if len(conditions) > 1 {
+		searchCondition = strings.Join(conditions, " AND ")
+	}
 	limitOffset := " ORDER BY popularity DESC, id ASC LIMIT ? OFFSET ?"
 
 	var res EstateSearchResponse
