@@ -703,7 +703,7 @@ func getLowPricedChair(c echo.Context) error {
 		c.Logger().Errorf("getLowPricedChair DB execution error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-
+	lowPricedChairs = chairs
 	return c.JSON(http.StatusOK, ChairListResponse{Chairs: chairs})
 }
 
@@ -995,6 +995,7 @@ func getLowPricedEstate(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+	lowPricedEstates = estates
 	return c.JSON(http.StatusOK, EstateListResponse{Estates: estates})
 }
 
