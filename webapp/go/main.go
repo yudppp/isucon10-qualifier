@@ -930,11 +930,11 @@ func searchEstates(c echo.Context) error {
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	searchQuery := fmt.Sprintf("SELECT * FROM estate %sWHERE ", join)
-	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM estate %sWHERE ", join)
+	searchQuery := fmt.Sprintf("SELECT * FROM estate %s ", join)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM estate %s ", join)
 	var searchCondition string
 	if len(conditions) > 1 {
-		searchCondition = strings.Join(conditions, " AND ")
+		searchCondition = "WHERE " + strings.Join(conditions, " AND ")
 	}
 	limitOffset := " ORDER BY popularity DESC, id ASC LIMIT ? OFFSET ?"
 
