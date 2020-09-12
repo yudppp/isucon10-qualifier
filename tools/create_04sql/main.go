@@ -205,7 +205,7 @@ func main() {
 			}
 		}
 		fmt.Printf(
-			"INSERT INTO isuumo.estate_features (chair_id, feature_id) VALUES %s;",
+			"INSERT INTO isuumo.estate_features (estate_id, feature_id) VALUES %s;",
 			strings.TrimSuffix(data, ","),
 		)
 	}
