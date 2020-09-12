@@ -479,7 +479,7 @@ func searchChairs(c echo.Context) error {
 	if c.QueryParam("features") != "" {
 		for i, f := range strings.Split(c.QueryParam("features"), ",") {
 			join += fmt.Sprintf("inner join chair_features cf%d on id = cf%d.chair_id and cf%d.feature_id =  ? ", i, i, i)
-			params = append(params, estateFeaturesMap[f])
+			params = append(params, chairFeaturesMap[f])
 		}
 	}
 
