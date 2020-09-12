@@ -287,7 +287,7 @@ func main() {
 	// Estate Handler
 	e.GET("/api/estate/:id", getEstateDetail)
 	e.POST("/api/estate", postEstate)
-	e.GET("/api/estate/search", oldSearchEstates)
+	e.GET("/api/estate/search", searchEstates)
 	e.GET("/api/estate/search/new", searchEstates)
 	e.GET("/api/estate/low_priced", getLowPricedEstate)
 	e.POST("/api/estate/req_doc/:id", postEstateRequestDocument)
@@ -1042,7 +1042,7 @@ func searchEstates(c echo.Context) error {
 	searchQuery := fmt.Sprintf("SELECT * FROM estate %s ", join)
 	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM estate %s ", join)
 	var searchCondition string
-	if len(conditions) > 1 {
+	if len(conditions) > 0 {
 		searchCondition = "WHERE " + strings.Join(conditions, " AND ")
 	}
 	limitOffset := " ORDER BY popularity DESC, id ASC LIMIT ? OFFSET ?"
