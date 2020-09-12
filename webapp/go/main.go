@@ -740,7 +740,7 @@ func postEstate(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	defer tx.Rollback()
-	baseEstateQuery := "INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES "
+	baseEstateQuery := "INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, geo, rent, door_height, door_width, features, popularity) VALUES "
 	estateQuery := baseEstateQuery
 
 	baseFeaturesQuery := "INSERT INTO estate_features (estate_id, feature_id) VALUES "
@@ -753,20 +753,30 @@ func postEstate(c echo.Context) error {
 		if i > 0 {
 			estateQuery += ","
 		}
-		estateQuery += "(?,?,?,?,?,?,?,?,?,?,?,?)"
+		estateQuery += "(?,?,?,?,?,?,?,?,?,?,?,?,?)"
 		rm := RecordMapper{Record: row}
 		id := rm.NextInt()
+		name := rm.NextString()
+		description := rm.NextString()
+		thumbnail := rm.NextString()
+		address := rm.NextString()
+		latitude := rm.NextFloat()
+		longitude := rm.NextFloat()
+		rent := rm.NextInt()
+		doorHeight := rm.NextInt()
+		doorWidth := rm.NextInt()
 		estateArgs = append(estateArgs, []interface{}{
 			id,
-			rm.NextString(), // name
-			rm.NextString(), // description
-			rm.NextString(), // thumbnail
-			rm.NextString(), // address
-			rm.NextFloat(),  // latitude
-			rm.NextFloat(),  // longitude
-			rm.NextInt(),    // rent
-			rm.NextInt(),    // doorHeight
-			rm.NextInt(),    // doorWidth
+			name,
+			description,
+			thumbnail,
+			address,
+			latitude,
+			longitude,
+			fmt.Sprintf("'POINT(%f %f)'", latitude, longitude),
+			rent,
+			doorHeight,
+			doorWidth,
 		}...)
 		features := rm.NextString()
 		estateArgs = append(estateArgs, []interface{}{
