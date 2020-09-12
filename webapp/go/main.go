@@ -275,7 +275,7 @@ func excludeBotRequestsHandler() echo.MiddlewareFunc {
 			}
 			for c := range ch {
 				if c {
-					return fmt.Errorf("request by bot: %s", ua)
+					return ctx.NoContent(http.StatusServiceUnavailable)
 				}
 			}
 			return nil
