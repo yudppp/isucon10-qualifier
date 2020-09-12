@@ -923,7 +923,7 @@ func searchEstates(c echo.Context) error {
 	searchQuery := fmt.Sprintf("SELECT * FROM estate %s ", join)
 	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM estate %s ", join)
 	var searchCondition string
-	if len(conditions) > 1 {
+	if len(conditions) > 0 {
 		searchCondition = "WHERE " + strings.Join(conditions, " AND ")
 	}
 	limitOffset := " ORDER BY popularity DESC, id ASC LIMIT ? OFFSET ?"
