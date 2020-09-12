@@ -284,7 +284,7 @@ func main() {
 
 	mySQLConnectionData = NewMySQLConnectionEnv()
 
-	db, err = mySQLConnectionData.ConnectDB()
+	db, err := mySQLConnectionData.ConnectDB()
 	if err != nil {
 		e.Logger.Fatalf("DB connection failed : %v", err)
 	}
