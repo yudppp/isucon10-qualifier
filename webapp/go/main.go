@@ -474,6 +474,14 @@ func searchChairs(c echo.Context) error {
 	params := make([]interface{}, 0)
 
 	ctx := c.Request().Context()
+	join := ""
+
+	if c.QueryParam("features") != "" {
+		for i, f := range strings.Split(c.QueryParam("features"), ",") {
+			join += fmt.Sprintf("inner join chair_features cf%d on id = cf%d.chair_id and cf%d.feature_id =  ? ", i)
+			params = append(params, estateFeaturesMap[f])
+		}
+	}
 
 	if c.QueryParam("priceRangeId") != "" {
 		chairPrice, err := getRange(chairSearchCondition.Price, c.QueryParam("priceRangeId"))
@@ -553,20 +561,6 @@ func searchChairs(c echo.Context) error {
 		params = append(params, c.QueryParam("color"))
 	}
 
-	if c.QueryParam("features") != "" {
-		featuresQuery := "id in ( select cf.chair_id from chair_features cf where cf.feature_id in ("
-		for i, f := range strings.Split(c.QueryParam("features"), ",") {
-			if i == 0 {
-				featuresQuery += "?"
-			} else {
-				featuresQuery += ",?"
-			}
-			params = append(params, chairFeaturesMap[f])
-		}
-		featuresQuery += "))"
-		conditions = append(conditions, featuresQuery)
-	}
-
 	if len(conditions) == 0 {
 		c.Echo().Logger.Infof("Search condition not found")
 		return c.NoContent(http.StatusBadRequest)
@@ -586,8 +580,8 @@ func searchChairs(c echo.Context) error {
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	searchQuery := "SELECT * FROM chair WHERE "
-	countQuery := "SELECT COUNT(*) FROM chair WHERE "
+	searchQuery := fmt.Sprintf("SELECT * FROM chair %sWHERE ", join)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM chair %sWHERE ", join)
 	searchCondition := strings.Join(conditions, " AND ")
 	limitOffset := " ORDER BY popularity DESC, id ASC LIMIT ? OFFSET ?"
 
@@ -853,6 +847,14 @@ func searchEstates(c echo.Context) error {
 	conditions := make([]string, 0)
 	params := make([]interface{}, 0)
 	ctx := c.Request().Context()
+	join := ""
+
+	if c.QueryParam("features") != "" {
+		for i, f := range strings.Split(c.QueryParam("features"), ",") {
+			join += fmt.Sprintf("inner join estate_features ef%d on id = ef%d.estate_id and ef%d.feature_id =  ? ", i)
+			params = append(params, estateFeaturesMap[f])
+		}
+	}
 
 	if c.QueryParam("doorHeightRangeId") != "" {
 		doorHeight, err := getRange(estateSearchCondition.DoorHeight, c.QueryParam("doorHeightRangeId"))
@@ -905,20 +907,6 @@ func searchEstates(c echo.Context) error {
 		}
 	}
 
-	if c.QueryParam("features") != "" {
-		featuresQuery := "id in ( select ef.estate_id from estate_features ef where ef.feature_id in ("
-		for i, f := range strings.Split(c.QueryParam("features"), ",") {
-			if i == 0 {
-				featuresQuery += "?"
-			} else {
-				featuresQuery += ",?"
-			}
-			params = append(params, estateFeaturesMap[f])
-		}
-		featuresQuery += "))"
-		conditions = append(conditions, featuresQuery)
-	}
-
 	if len(conditions) == 0 {
 		c.Echo().Logger.Infof("searchEstates search condition not found")
 		return c.NoContent(http.StatusBadRequest)
@@ -936,8 +924,8 @@ func searchEstates(c echo.Context) error {
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	searchQuery := "SELECT * FROM estate WHERE "
-	countQuery := "SELECT COUNT(*) FROM estate WHERE "
+	searchQuery := fmt.Sprintf("SELECT * FROM estate %sWHERE ", join)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM estate %sWHERE ", join)
 	searchCondition := strings.Join(conditions, " AND ")
 	limitOffset := " ORDER BY popularity DESC, id ASC LIMIT ? OFFSET ?"
 
