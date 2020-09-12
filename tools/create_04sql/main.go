@@ -143,6 +143,11 @@ func main() {
 		reader := csv.NewReader(file)
 		reader.Comma = '\t'
 		data := ""
+		// remove header
+		_, err = reader.Read() // 1行読み出し
+		if err != nil {
+			panic(err)
+		}
 		for {
 			line, err := reader.Read() // 1行読み出し
 			if err == io.EOF {
@@ -154,7 +159,11 @@ func main() {
 				continue
 			}
 			for _, feature := range strings.Split(line[1], ",") {
-				data += fmt.Sprintf("(%s, '%s'),", line[0], feature)
+				featureID, ok := chairFeaturesMap[feature]
+				if !ok {
+					panic(feature)
+				}
+				data += fmt.Sprintf("(%v, %v),", line[0], featureID)
 			}
 		}
 		fmt.Printf(
@@ -172,6 +181,11 @@ func main() {
 		reader := csv.NewReader(file)
 		reader.Comma = '\t'
 		data := ""
+		// remove header
+		_, err = reader.Read() // 1行読み出し
+		if err != nil {
+			panic(err)
+		}
 		for {
 			line, err := reader.Read() // 1行読み出し
 			if err == io.EOF {
@@ -183,7 +197,11 @@ func main() {
 				continue
 			}
 			for _, feature := range strings.Split(line[1], ",") {
-				data += fmt.Sprintf("(%s, '%s'),", line[0], feature)
+				featureID, ok := estateFeaturesMap[feature]
+				if !ok {
+					panic(feature)
+				}
+				data += fmt.Sprintf("(%v, %v),", line[0], featureID)
 			}
 		}
 		fmt.Printf(
