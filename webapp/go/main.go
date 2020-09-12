@@ -800,7 +800,7 @@ func postEstate(c echo.Context) error {
 			address,
 			latitude,
 			longitude,
-			fmt.Sprintf("'POINT(%f %f)'", latitude, longitude),
+			fmt.Sprintf("ST_GeomFromText('POINT(%f %f)')", latitude, longitude),
 			rent,
 			doorHeight,
 			doorWidth,
