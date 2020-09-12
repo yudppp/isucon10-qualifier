@@ -606,51 +606,48 @@ func searchChairs(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
-
 type keyMutex struct {
-    localLockMap map[int64]*sync.Mutex
-    globalLock   sync.Mutex
+	localLockMap map[int64]*sync.Mutex
+	globalLock   sync.Mutex
 }
 
 func NewKeyMutex() *keyMutex {
-    return &keyMutex{localLockMap: map[int64]*sync.Mutex{}}
+	return &keyMutex{localLockMap: map[int]*sync.Mutex{}}
 }
 
-func (km *keyMutex) Lock(key int64) {
-    km.globalLock.Lock()
+func (km *keyMutex) Lock(key int) {
+	km.globalLock.Lock()
 
-    wl, ok := km.localLockMap[key]
+	wl, ok := km.localLockMap[key]
 
-    if !ok {
-        wl = &sync.Mutex{}
-        km.localLockMap[key] = wl
-    }
+	if !ok {
+		wl = &sync.Mutex{}
+		km.localLockMap[key] = wl
+	}
 
-    km.globalLock.Unlock()
+	km.globalLock.Unlock()
 
-    wl.Lock()
+	wl.Lock()
 }
 
-func (km *keyMutex) Unlock(key int64) {
-    km.globalLock.Lock()
+func (km *keyMutex) Unlock(key int) {
+	km.globalLock.Lock()
 
-    wl, ok := km.localLockMap[key]
+	wl, ok := km.localLockMap[key]
 
-    if !ok {
-        km.globalLock.Unlock()
-        return
-    }
+	if !ok {
+		km.globalLock.Unlock()
+		return
+	}
 
-    delete(km.localLockMap, key)
+	delete(km.localLockMap, key)
 
-    km.globalLock.Unlock()
+	km.globalLock.Unlock()
 
-    wl.Unlock()
+	wl.Unlock()
 }
 
 var buyChairMutex = NewKeyMutex()
-
-
 
 func buyChair(c echo.Context) error {
 	ctx := c.Request().Context()
