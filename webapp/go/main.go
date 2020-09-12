@@ -557,7 +557,7 @@ func searchChairs(c echo.Context) error {
 			} else {
 				featuresQuery += ",?"
 			}
-			params = append(params, estateFeaturesMap[f])
+			params = append(params, chairFeaturesMap[f])
 		}
 		featuresQuery += "))"
 		conditions = append(conditions, featuresQuery)
