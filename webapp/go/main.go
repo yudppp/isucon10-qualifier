@@ -66,18 +66,19 @@ type ChairListResponse struct {
 
 //Estate 物件
 type Estate struct {
-	ID          int64   `db:"id" json:"id"`
-	Thumbnail   string  `db:"thumbnail" json:"thumbnail"`
-	Name        string  `db:"name" json:"name"`
-	Description string  `db:"description" json:"description"`
-	Latitude    float64 `db:"latitude" json:"latitude"`
-	Longitude   float64 `db:"longitude" json:"longitude"`
-	Address     string  `db:"address" json:"address"`
-	Rent        int64   `db:"rent" json:"rent"`
-	DoorHeight  int64   `db:"door_height" json:"doorHeight"`
-	DoorWidth   int64   `db:"door_width" json:"doorWidth"`
-	Features    string  `db:"features" json:"features"`
-	Popularity  int64   `db:"popularity" json:"-"`
+	ID          int64       `db:"id" json:"id"`
+	Thumbnail   string      `db:"thumbnail" json:"thumbnail"`
+	Name        string      `db:"name" json:"name"`
+	Description string      `db:"description" json:"description"`
+	Latitude    float64     `db:"latitude" json:"latitude"`
+	Longitude   float64     `db:"longitude" json:"longitude"`
+	Geo         interface{} `db:"geo" json:"-"`
+	Address     string      `db:"address" json:"address"`
+	Rent        int64       `db:"rent" json:"rent"`
+	DoorHeight  int64       `db:"door_height" json:"doorHeight"`
+	DoorWidth   int64       `db:"door_width" json:"doorWidth"`
+	Features    string      `db:"features" json:"features"`
+	Popularity  int64       `db:"popularity" json:"-"`
 }
 
 //EstateSearchResponse estate/searchへのレスポンスの形式
@@ -1012,8 +1013,7 @@ func searchEstateNazotte(c echo.Context) error {
 	for _, estate := range estatesInBoundingBox {
 		validatedEstate := Estate{}
 
-		point := fmt.Sprintf("'POINT(%f %f)'", estate.Latitude, estate.Longitude)
-		query := fmt.Sprintf(`SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(%s))`, coordinates.coordinatesToText(), point)
+		query := fmt.Sprintf(`SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), geo)`, coordinates.coordinatesToText())
 		err = db.GetContext(ctx, &validatedEstate, query, estate.ID)
 		if err != nil {
 			if err == sql.ErrNoRows {
