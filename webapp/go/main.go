@@ -790,7 +790,11 @@ func postEstate(c echo.Context) error {
 			address,
 			latitude,
 			longitude,
+<<<<<<< Updated upstream
 			fmt.Sprintf("POINT(%f %f)", latitude, longitude),
+=======
+			fmt.Sprintf("ST_GeomFromText('POINT(%f %f)')", latitude, longitude),
+>>>>>>> Stashed changes
 			rent,
 			doorHeight,
 			doorWidth,
