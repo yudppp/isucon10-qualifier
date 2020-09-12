@@ -780,7 +780,7 @@ func postEstate(c echo.Context) error {
 		if i > 0 {
 			estateQuery += ","
 		}
-		estateQuery += "(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+		estateQuery += "(?,?,?,?,?,?,?,ST_GeomFromText(?),?,?,?,?,?)"
 		rm := RecordMapper{Record: row}
 		id := rm.NextInt()
 		name := rm.NextString()
@@ -800,7 +800,7 @@ func postEstate(c echo.Context) error {
 			address,
 			latitude,
 			longitude,
-			fmt.Sprintf("ST_GeomFromText('POINT(%f %f)')", latitude, longitude),
+			fmt.Sprintf("POINT(%f %f)", latitude, longitude),
 			rent,
 			doorHeight,
 			doorWidth,
