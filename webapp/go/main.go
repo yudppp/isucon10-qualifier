@@ -56,7 +56,7 @@ type Chair struct {
 	Stock       int64  `db:"stock" json:"-"`
 
 	ChairID   int64 `db:"chair_id" json:"-"`
-	FeatureID int64 `db:"chair_id" json:"-"`
+	FeatureID int64 `db:"feature_id" json:"-"`
 }
 
 type ChairSearchResponse struct {
@@ -85,7 +85,7 @@ type Estate struct {
 	Popularity  int64       `db:"popularity" json:"-"`
 
 	EstateID  int64 `db:"estate_id" json:"-"`
-	FeatureID int64 `db:"chair_id" json:"-"`
+	FeatureID int64 `db:"feature_id" json:"-"`
 }
 
 //EstateSearchResponse estate/searchへのレスポンスの形式
