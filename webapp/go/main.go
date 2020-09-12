@@ -588,7 +588,7 @@ func searchChairs(c echo.Context) error {
 	var res ChairSearchResponse
 	err = db.GetContext(ctx, &res.Count, countQuery+searchCondition, params...)
 	if err != nil {
-		c.Logger().Errorf("searchChairs DB execution error : %v: %v", err, countQuery+searchCondition)
+		c.Logger().Errorf("searchChairs DB execution error : %v: %v: %v", err, countQuery+searchCondition, params)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
@@ -599,7 +599,7 @@ func searchChairs(c echo.Context) error {
 		if err == sql.ErrNoRows {
 			return c.JSON(http.StatusOK, ChairSearchResponse{Count: 0, Chairs: []Chair{}})
 		}
-		c.Logger().Errorf("searchChairs DB execution error : %v: %v", err, searchQuery+searchCondition+limitOffset)
+		c.Logger().Errorf("searchChairs DB execution error : %v: %v: %v", err, searchQuery+searchCondition+limitOffset, params)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
