@@ -388,17 +388,25 @@ func postChair(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	defer tx.Rollback()
-	baseQuery := "INSERT INTO chair(id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock) VALUES"
-	query := baseQuery
-	var args []interface{}
+	baseChairQuery := "INSERT INTO chair(id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock) VALUES "
+	chairQuery := baseChairQuery
+
+	baseFeaturesQuery := "INSERT INTO chair_features (chair_id, feature_id) VALUES "
+	featuresQuery := baseFeaturesQuery
+	var (
+		chairArgs    []interface{}
+		featuresArgs []interface{}
+	)
 	for i, row := range records {
 		if i > 0 {
-			query += ","
+			chairQuery += ","
+			featuresQuery += ","
 		}
-		query += "(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+		chairQuery += "(?,?,?,?,?,?,?,?,?,?,?,?,?)"
 		rm := RecordMapper{Record: row}
-		args = append(args, []interface{}{
-			rm.NextInt(),    // id
+		id := rm.NextInt()
+		chairArgs = append(chairArgs, []interface{}{
+			id,
 			rm.NextString(), // name
 			rm.NextString(), // description
 			rm.NextString(), // thumbnail
@@ -407,7 +415,10 @@ func postChair(c echo.Context) error {
 			rm.NextInt(),    // width
 			rm.NextInt(),    // depth
 			rm.NextString(), // color
-			rm.NextString(), // features
+		}...)
+		features := rm.NextString()
+		chairArgs = append(chairArgs, []interface{}{
+			features,
 			rm.NextString(), // kind
 			rm.NextInt(),    // popularity
 			rm.NextInt(),    // stock
@@ -416,11 +427,24 @@ func postChair(c echo.Context) error {
 			c.Logger().Errorf("failed to read record: %v", err)
 			return c.NoContent(http.StatusBadRequest)
 		}
+
+		featuresSlice := strings.Split(features, ",")
+		for _, f := range featuresSlice {
+			featuresQuery += "(?,?)"
+			featuresArgs = append(featuresArgs, []interface{}{id, f}...)
+		}
 	}
-	if baseQuery != query {
-		_, err := tx.ExecContext(ctx, query, args...)
+	if baseChairQuery != chairQuery {
+		_, err := tx.ExecContext(ctx, chairQuery, chairArgs...)
 		if err != nil {
 			c.Logger().Errorf("failed to insert chair: %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+	}
+	if baseFeaturesQuery != featuresQuery {
+		_, err := tx.ExecContext(ctx, featuresQuery, featuresArgs...)
+		if err != nil {
+			c.Logger().Errorf("failed to insert chair_features: %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}
@@ -703,17 +727,24 @@ func postEstate(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	defer tx.Rollback()
-	baseQuery := "INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES"
-	var args []interface{}
-	query := baseQuery
+	baseEstateQuery := "INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES "
+	estateQuery := baseEstateQuery
+
+	baseFeaturesQuery := "INSERT INTO estate_features (estate_id, feature_id) VALUES "
+	featuresQuery := baseFeaturesQuery
+	var (
+		estateArgs   []interface{}
+		featuresArgs []interface{}
+	)
 	for i, row := range records {
 		if i > 0 {
-			query += ","
+			estateQuery += ","
 		}
-		query += "(?,?,?,?,?,?,?,?,?,?,?,?)"
+		estateQuery += "(?,?,?,?,?,?,?,?,?,?,?,?)"
 		rm := RecordMapper{Record: row}
-		args = append(args, []interface{}{
-			rm.NextInt(),    // id
+		id := rm.NextInt()
+		estateArgs = append(estateArgs, []interface{}{
+			id,
 			rm.NextString(), // name
 			rm.NextString(), // description
 			rm.NextString(), // thumbnail
@@ -723,18 +754,34 @@ func postEstate(c echo.Context) error {
 			rm.NextInt(),    // rent
 			rm.NextInt(),    // doorHeight
 			rm.NextInt(),    // doorWidth
-			rm.NextString(), // features
-			rm.NextInt(),    // popularity
+		}...)
+		features := rm.NextString()
+		estateArgs = append(estateArgs, []interface{}{
+			features,
+			rm.NextInt(), // popularity
 		}...)
 		if err := rm.Err(); err != nil {
 			c.Logger().Errorf("failed to read record: %v", err)
 			return c.NoContent(http.StatusBadRequest)
 		}
+
+		featuresSlice := strings.Split(features, ",")
+		for _, f := range featuresSlice {
+			featuresQuery += "(?,?)"
+			featuresArgs = append(featuresArgs, []interface{}{id, f}...)
+		}
 	}
-	if baseQuery != query {
-		_, err = tx.ExecContext(ctx, query, args...)
+	if baseEstateQuery != estateQuery {
+		_, err = tx.ExecContext(ctx, estateQuery, estateArgs...)
 		if err != nil {
 			c.Logger().Errorf("failed to insert estate: %v", err)
+			return c.NoContent(http.StatusInternalServerError)
+		}
+	}
+	if baseFeaturesQuery != featuresQuery {
+		_, err = tx.ExecContext(ctx, featuresQuery, featuresArgs...)
+		if err != nil {
+			c.Logger().Errorf("failed to insert estate_features: %v", err)
 			return c.NoContent(http.StatusInternalServerError)
 		}
 	}

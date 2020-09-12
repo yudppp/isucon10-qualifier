@@ -106,18 +106,18 @@ var (
 		"TVモニタ付きインタホン",
 		"デザイナーズ物件",
 	}
-	chairFeaturesMap  map[int]string
-	estateFeaturesMap map[int]string
+	chairFeaturesMap  map[string]int
+	estateFeaturesMap map[string]int
 )
 
 func init() {
-	chairFeaturesMap = make(map[int]string, len(chairFeatures))
+	chairFeaturesMap = make(map[string]int, len(chairFeatures))
 	for i, cf := range chairFeatures {
-		chairFeaturesMap[i+1] = cf
+		chairFeaturesMap[cf] = i + 1
 	}
 
-	estateFeaturesMap = make(map[int]string, len(estateFeatures))
+	estateFeaturesMap = make(map[string]int, len(estateFeatures))
 	for i, ef := range estateFeatures {
-		estateFeaturesMap[i+1] = ef
+		estateFeaturesMap[ef] = i + 1
 	}
 }
