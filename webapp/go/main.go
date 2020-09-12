@@ -269,6 +269,9 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
+	// debug
+	e.GET("/debug/profile", debugProfile)
+
 	// Initialize
 	e.GET("/initialize/xxx", initialize)
 	e.POST("/initialize", initialize)
@@ -303,6 +306,16 @@ func main() {
 	// Start server
 	serverPort := fmt.Sprintf(":%v", getEnv("SERVER_PORT", "1323"))
 	e.Logger.Fatal(e.Start(serverPort))
+}
+
+func debugProfile(c echo.Context) error {
+	err := profile.StartCPU(time.Second*5, true)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return c.JSON(http.StatusOK, InitializeResponse{
+		Language: "go",
+	})
 }
 
 func initialize(c echo.Context) error {
