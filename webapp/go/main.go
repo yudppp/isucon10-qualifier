@@ -400,7 +400,6 @@ func postChair(c echo.Context) error {
 	for i, row := range records {
 		if i > 0 {
 			chairQuery += ","
-			featuresQuery += ","
 		}
 		chairQuery += "(?,?,?,?,?,?,?,?,?,?,?,?,?)"
 		rm := RecordMapper{Record: row}
@@ -429,8 +428,8 @@ func postChair(c echo.Context) error {
 		}
 
 		featuresSlice := strings.Split(features, ",")
-		for i2, f := range featuresSlice {
-			if i2 > 0 {
+		for _, f := range featuresSlice {
+			if baseFeaturesQuery != featuresQuery {
 				featuresQuery += ","
 			}
 			featuresQuery += "(?,?)"
@@ -776,8 +775,8 @@ func postEstate(c echo.Context) error {
 		}
 
 		featuresSlice := strings.Split(features, ",")
-		for i2, f := range featuresSlice {
-			if i2 > 0 {
+		for _, f := range featuresSlice {
+			if baseFeaturesQuery != featuresQuery {
 				featuresQuery += ","
 			}
 			featuresQuery += "(?,?)"
