@@ -388,26 +388,37 @@ func postChair(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	defer tx.Rollback()
-	for _, row := range records {
+	baseQuery := "INSERT INTO chair(id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock) VALUES"
+	query := baseQuery
+	var args []interface{}
+	for i, row := range records {
+		if i > 0 {
+			query += ","
+		}
+		query += "(?,?,?,?,?,?,?,?,?,?,?,?,?)"
 		rm := RecordMapper{Record: row}
-		id := rm.NextInt()
-		name := rm.NextString()
-		description := rm.NextString()
-		thumbnail := rm.NextString()
-		price := rm.NextInt()
-		height := rm.NextInt()
-		width := rm.NextInt()
-		depth := rm.NextInt()
-		color := rm.NextString()
-		features := rm.NextString()
-		kind := rm.NextString()
-		popularity := rm.NextInt()
-		stock := rm.NextInt()
+		args = append(args, []interface{}{
+			rm.NextInt(),    // id
+			rm.NextString(), // name
+			rm.NextString(), // description
+			rm.NextString(), // thumbnail
+			rm.NextInt(),    // price
+			rm.NextInt(),    // height
+			rm.NextInt(),    // width
+			rm.NextInt(),    // depth
+			rm.NextString(), // color
+			rm.NextString(), // features
+			rm.NextString(), // kind
+			rm.NextInt(),    // popularity
+			rm.NextInt(),    // stock
+		}...)
 		if err := rm.Err(); err != nil {
 			c.Logger().Errorf("failed to read record: %v", err)
 			return c.NoContent(http.StatusBadRequest)
 		}
-		_, err := tx.ExecContext(ctx, "INSERT INTO chair(id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)", id, name, description, thumbnail, price, height, width, depth, color, features, kind, popularity, stock)
+	}
+	if baseQuery != query {
+		_, err := tx.ExecContext(ctx, query, args...)
 		if err != nil {
 			c.Logger().Errorf("failed to insert chair: %v", err)
 			return c.NoContent(http.StatusInternalServerError)
@@ -692,25 +703,36 @@ func postEstate(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	defer tx.Rollback()
-	for _, row := range records {
+	baseQuery := "INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES"
+	var args []interface{}
+	query := baseQuery
+	for i, row := range records {
+		if i > 0 {
+			query += ","
+		}
+		query += "(?,?,?,?,?,?,?,?,?,?,?,?)"
 		rm := RecordMapper{Record: row}
-		id := rm.NextInt()
-		name := rm.NextString()
-		description := rm.NextString()
-		thumbnail := rm.NextString()
-		address := rm.NextString()
-		latitude := rm.NextFloat()
-		longitude := rm.NextFloat()
-		rent := rm.NextInt()
-		doorHeight := rm.NextInt()
-		doorWidth := rm.NextInt()
-		features := rm.NextString()
-		popularity := rm.NextInt()
+		args = append(args, []interface{}{
+			rm.NextInt(),    // id
+			rm.NextString(), // name
+			rm.NextString(), // description
+			rm.NextString(), // thumbnail
+			rm.NextString(), // address
+			rm.NextFloat(),  // latitude
+			rm.NextFloat(),  // longitude
+			rm.NextInt(),    // rent
+			rm.NextInt(),    // doorHeight
+			rm.NextInt(),    // doorWidth
+			rm.NextString(), // features
+			rm.NextInt(),    // popularity
+		}...)
 		if err := rm.Err(); err != nil {
 			c.Logger().Errorf("failed to read record: %v", err)
 			return c.NoContent(http.StatusBadRequest)
 		}
-		_, err := tx.ExecContext(ctx, "INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)", id, name, description, thumbnail, address, latitude, longitude, rent, doorHeight, doorWidth, features, popularity)
+	}
+	if baseQuery != query {
+		_, err = tx.ExecContext(ctx, query, args...)
 		if err != nil {
 			c.Logger().Errorf("failed to insert estate: %v", err)
 			return c.NoContent(http.StatusInternalServerError)
