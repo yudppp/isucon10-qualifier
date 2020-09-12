@@ -849,10 +849,17 @@ func searchEstates(c echo.Context) error {
 	}
 
 	if c.QueryParam("features") != "" {
-		for _, f := range strings.Split(c.QueryParam("features"), ",") {
-			conditions = append(conditions, "features like concat('%', ?, '%')")
-			params = append(params, f)
+		featuresQuery := "exists ( select 1 from estate_features ef where ef.feature_id in ("
+		for i, f := range strings.Split(c.QueryParam("features"), ",") {
+			if i == 0 {
+				featuresQuery += "?"
+			} else {
+				featuresQuery += ",?"
+			}
+			params = append(params, estateFeaturesMap[f])
 		}
+		featuresQuery += ")"
+		conditions = append(conditions, featuresQuery)
 	}
 
 	if len(conditions) == 0 {
