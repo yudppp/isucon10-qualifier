@@ -251,7 +251,7 @@ func init() {
 func main() {
 
 	app, err := newrelic.NewApplication(
-		newrelic.ConfigAppName("isucon7-qualifier"),
+		newrelic.ConfigAppName("isucon10-qualifier"),
 		newrelic.ConfigLicense("66a9360acdf0399f0b249cdd9a6f517861a1NRAL"),
 		newrelic.ConfigDistributedTracerEnabled(true),
 	)
