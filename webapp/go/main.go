@@ -270,7 +270,7 @@ func main() {
 	e.Use(middleware.Recover())
 
 	// debug
-	e.GET("/debug/profile", debugProfile)
+	e.GET("/api/debug/profile", debugProfile)
 
 	// Initialize
 	e.GET("/initialize/xxx", initialize)
