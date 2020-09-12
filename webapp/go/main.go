@@ -607,7 +607,7 @@ func searchChairs(c echo.Context) error {
 }
 
 type keyMutex struct {
-	localLockMap map[int64]*sync.Mutex
+	localLockMap map[int]*sync.Mutex
 	globalLock   sync.Mutex
 }
 
