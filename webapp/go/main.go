@@ -10,7 +10,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -1017,18 +1016,11 @@ func searchRecommendedEstateWithChair(c echo.Context) error {
 	}
 
 	var estates []Estate
-	// Comment out
-	// w := chair.Width
-	// h := chair.Height
-	// d := chair.Depth
-	// query = `SELECT * FROM estate WHERE (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) ORDER BY popularity DESC, id ASC LIMIT ?`
-	// err = db.SelectContext(ctx, &estates, query, w, h, w, d, h, w, h, d, d, w, d, h, Limit)
-	size := []int64{chair.Width, chair.Height, chair.Depth}
-	sort.Slice(size, func(i, j int) bool {
-		return size[i] > size[j]
-	})
-	query = `SELECT * FROM estate WHERE (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) ORDER BY popularity DESC, id ASC LIMIT ?`
-	err = db.SelectContext(ctx, &estates, query, size[0], size[1], size[1], size[0], Limit)
+	w := chair.Width
+	h := chair.Height
+	d := chair.Depth
+	query = `SELECT * FROM estate WHERE (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) OR (door_width >= ? AND door_height >= ?) ORDER BY popularity DESC, id ASC LIMIT ?`
+	err = db.SelectContext(ctx, &estates, query, w, h, w, d, h, w, h, d, d, w, d, h, Limit)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return c.JSON(http.StatusOK, EstateListResponse{[]Estate{}})
