@@ -793,7 +793,7 @@ func postEstate(c echo.Context) error {
 				featuresQuery += ","
 			}
 			featuresQuery += "(?,?)"
-			featuresArgs = append(featuresArgs, []interface{}{id, f}...)
+			featuresArgs = append(featuresArgs, []interface{}{id, estateFeaturesMap[f]}...)
 		}
 	}
 	if baseEstateQuery != estateQuery {
