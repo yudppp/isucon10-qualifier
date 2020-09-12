@@ -648,7 +648,7 @@ func (km *keyMutex) Unlock(key int64) {
     wl.Unlock()
 }
 
-var buyChairMutex = kmutex.NewKeyMutex()
+var buyChairMutex = NewKeyMutex()
 
 
 
