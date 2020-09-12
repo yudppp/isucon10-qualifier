@@ -930,18 +930,18 @@ func searchEstates(c echo.Context) error {
 		return c.NoContent(http.StatusBadRequest)
 	}
 
-	searchQuery := fmt.Sprintf("SELECT * FROM estate %sWHERE ", join)
-	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM estate %sWHERE ", join)
+	searchQuery := fmt.Sprintf("SELECT * FROM estate %s ", join)
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM estate %s ", join)
 	var searchCondition string
 	if len(conditions) > 1 {
-		searchCondition = strings.Join(conditions, " AND ")
+		searchCondition = "WHERE " + strings.Join(conditions, " AND ")
 	}
 	limitOffset := " ORDER BY popularity DESC, id ASC LIMIT ? OFFSET ?"
 
 	var res EstateSearchResponse
 	err = db.GetContext(ctx, &res.Count, countQuery+searchCondition, params...)
 	if err != nil {
-		c.Logger().Errorf("searchEstates DB execution error : %v", err)
+		c.Logger().Errorf("searchEstates DB execution error : %v: %v: %v", err, countQuery+searchCondition, params)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
