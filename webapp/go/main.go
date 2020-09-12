@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime/pprof"
 	"sort"
 	"strconv"
 	"strings"
@@ -23,7 +24,6 @@ import (
 	"github.com/newrelic/go-agent/v3/integrations/nrecho-v3"
 	_ "github.com/newrelic/go-agent/v3/integrations/nrmysql"
 	"github.com/newrelic/go-agent/v3/newrelic"
-	"github.com/yudppp/isutools/profile"
 	"github.com/yudppp/isutools/utils/slackcat"
 )
 
@@ -308,8 +308,38 @@ func main() {
 	e.Logger.Fatal(e.Start(serverPort))
 }
 
+func StartCPU(duration time.Duration) error {
+	f, err := ioutil.TempFile("", "cpu")
+	if err != nil {
+		return err
+	}
+	if err := pprof.StartCPUProfile(f); err != nil {
+		return err
+	}
+	timerStop := func() {
+		pprof.StopCPUProfile()
+		f.Close()
+		imageFile := "pprof.png"
+		fmt.Println("go", "tool", "pprof", "-png", "-output", imageFile, f.Name())
+		cmd := exec.Command("go", "tool", "pprof", "-png", "-output", imageFile, f.Name())
+		cmd.Stdout = os.Stdout
+		cmd.Stdin = os.Stdin
+		err = cmd.Run()
+		if err != nil {
+			fmt.Println(err)
+		}
+		err = slackcat.SendFile(imageFile, "pprof.png")
+		if err != nil {
+			fmt.Println(err)
+		}
+		os.Remove(f.Name())
+	}
+	go timerStop()
+	return nil
+}
+
 func debugProfile(c echo.Context) error {
-	err := profile.StartCPU(time.Second*5, true)
+	err := StartCPU(time.Second * 5)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -319,7 +349,7 @@ func debugProfile(c echo.Context) error {
 }
 
 func initialize(c echo.Context) error {
-	profile.StartCPU(time.Second*75, true)
+	StartCPU(time.Second * 75)
 
 	sqlDir := filepath.Join("..", "mysql", "db")
 	paths := []string{
