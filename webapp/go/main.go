@@ -66,18 +66,19 @@ type ChairListResponse struct {
 
 //Estate 物件
 type Estate struct {
-	ID          int64   `db:"id" json:"id"`
-	Thumbnail   string  `db:"thumbnail" json:"thumbnail"`
-	Name        string  `db:"name" json:"name"`
-	Description string  `db:"description" json:"description"`
-	Latitude    float64 `db:"latitude" json:"latitude"`
-	Longitude   float64 `db:"longitude" json:"longitude"`
-	Address     string  `db:"address" json:"address"`
-	Rent        int64   `db:"rent" json:"rent"`
-	DoorHeight  int64   `db:"door_height" json:"doorHeight"`
-	DoorWidth   int64   `db:"door_width" json:"doorWidth"`
-	Features    string  `db:"features" json:"features"`
-	Popularity  int64   `db:"popularity" json:"-"`
+	ID          int64       `db:"id" json:"id"`
+	Thumbnail   string      `db:"thumbnail" json:"thumbnail"`
+	Name        string      `db:"name" json:"name"`
+	Description string      `db:"description" json:"description"`
+	Latitude    float64     `db:"latitude" json:"latitude"`
+	Longitude   float64     `db:"longitude" json:"longitude"`
+	Geo         interface{} `db:"geo" json:"-"`
+	Address     string      `db:"address" json:"address"`
+	Rent        int64       `db:"rent" json:"rent"`
+	DoorHeight  int64       `db:"door_height" json:"doorHeight"`
+	DoorWidth   int64       `db:"door_width" json:"doorWidth"`
+	Features    string      `db:"features" json:"features"`
+	Popularity  int64       `db:"popularity" json:"-"`
 }
 
 //EstateSearchResponse estate/searchへのレスポンスの形式
@@ -742,7 +743,7 @@ func postEstate(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	defer tx.Rollback()
-	baseEstateQuery := "INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, rent, door_height, door_width, features, popularity) VALUES "
+	baseEstateQuery := "INSERT INTO estate(id, name, description, thumbnail, address, latitude, longitude, geo, rent, door_height, door_width, features, popularity) VALUES "
 	estateQuery := baseEstateQuery
 
 	baseFeaturesQuery := "INSERT INTO estate_features (estate_id, feature_id) VALUES "
@@ -755,20 +756,30 @@ func postEstate(c echo.Context) error {
 		if i > 0 {
 			estateQuery += ","
 		}
-		estateQuery += "(?,?,?,?,?,?,?,?,?,?,?,?)"
+		estateQuery += "(?,?,?,?,?,?,?,?,?,?,?,?,?)"
 		rm := RecordMapper{Record: row}
 		id := rm.NextInt()
+		name := rm.NextString()
+		description := rm.NextString()
+		thumbnail := rm.NextString()
+		address := rm.NextString()
+		latitude := rm.NextFloat()
+		longitude := rm.NextFloat()
+		rent := rm.NextInt()
+		doorHeight := rm.NextInt()
+		doorWidth := rm.NextInt()
 		estateArgs = append(estateArgs, []interface{}{
 			id,
-			rm.NextString(), // name
-			rm.NextString(), // description
-			rm.NextString(), // thumbnail
-			rm.NextString(), // address
-			rm.NextFloat(),  // latitude
-			rm.NextFloat(),  // longitude
-			rm.NextInt(),    // rent
-			rm.NextInt(),    // doorHeight
-			rm.NextInt(),    // doorWidth
+			name,
+			description,
+			thumbnail,
+			address,
+			latitude,
+			longitude,
+			fmt.Sprintf("'POINT(%f %f)'", latitude, longitude),
+			rent,
+			doorHeight,
+			doorWidth,
 		}...)
 		features := rm.NextString()
 		estateArgs = append(estateArgs, []interface{}{
@@ -1018,8 +1029,7 @@ func searchEstateNazotte(c echo.Context) error {
 	for _, estate := range estatesInBoundingBox {
 		validatedEstate := Estate{}
 
-		point := fmt.Sprintf("'POINT(%f %f)'", estate.Latitude, estate.Longitude)
-		query := fmt.Sprintf(`SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), ST_GeomFromText(%s))`, coordinates.coordinatesToText(), point)
+		query := fmt.Sprintf(`SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), geo)`, coordinates.coordinatesToText())
 		err = db.GetContext(ctx, &validatedEstate, query, estate.ID)
 		if err != nil {
 			if err == sql.ErrNoRows {
