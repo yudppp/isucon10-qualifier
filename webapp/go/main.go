@@ -269,6 +269,7 @@ func main() {
 	e.Use(middleware.Recover())
 
 	// Initialize
+	e.GET("/initialize/xxx", initialize)
 	e.POST("/initialize", initialize)
 
 	// Chair Handler
