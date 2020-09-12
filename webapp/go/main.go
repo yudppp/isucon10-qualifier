@@ -429,7 +429,10 @@ func postChair(c echo.Context) error {
 		}
 
 		featuresSlice := strings.Split(features, ",")
-		for _, f := range featuresSlice {
+		for i2, f := range featuresSlice {
+			if i2 > 0 {
+				featuresQuery += ","
+			}
 			featuresQuery += "(?,?)"
 			featuresArgs = append(featuresArgs, []interface{}{id, f}...)
 		}
@@ -773,7 +776,10 @@ func postEstate(c echo.Context) error {
 		}
 
 		featuresSlice := strings.Split(features, ",")
-		for _, f := range featuresSlice {
+		for i2, f := range featuresSlice {
+			if i2 > 0 {
+				featuresQuery += ","
+			}
 			featuresQuery += "(?,?)"
 			featuresArgs = append(featuresArgs, []interface{}{id, f}...)
 		}
