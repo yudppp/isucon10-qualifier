@@ -13,6 +13,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -364,6 +365,8 @@ func getChairDetail(c echo.Context) error {
 		c.Echo().Logger.Infof("requested id's chair is sold out : %v", id)
 		return c.NoContent(http.StatusNotFound)
 	}
+	invalidationLowPricedEstates()
+	invalidationLowPricedChairs()
 
 	return c.JSON(http.StatusOK, chair)
 }
@@ -462,6 +465,7 @@ func postChair(c echo.Context) error {
 		c.Logger().Errorf("failed to commit tx: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+	invalidationLowPricedChairs()
 	return c.NoContent(http.StatusCreated)
 }
 
@@ -660,6 +664,8 @@ func buyChair(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+	invalidationLowPricedChairs()
+
 	return c.NoContent(http.StatusOK)
 }
 
@@ -667,7 +673,24 @@ func getChairSearchCondition(c echo.Context) error {
 	return c.JSON(http.StatusOK, chairSearchCondition)
 }
 
+var lowPricedChairs []Chair
+var lowPricedChairsLock = new(sync.Mutex)
+
+func invalidationLowPricedChairs() {
+	lowPricedChairsLock.Lock()
+	lowPricedChairs = nil
+	lowPricedChairsLock.Unlock()
+}
+
 func getLowPricedChair(c echo.Context) error {
+	if lowPricedChairs != nil || len(lowPricedChairs) > 0 {
+		return c.JSON(http.StatusOK, ChairListResponse{Chairs: lowPricedChairs})
+	}
+	lowPricedChairsLock.Lock()
+	defer lowPricedChairsLock.Unlock()
+	if lowPricedChairs != nil || len(lowPricedChairs) > 0 {
+		return c.JSON(http.StatusOK, ChairListResponse{Chairs: lowPricedChairs})
+	}
 	ctx := c.Request().Context()
 	var chairs []Chair
 	query := `SELECT * FROM chair WHERE stock > 0 ORDER BY price ASC, id ASC LIMIT ?`
@@ -680,7 +703,7 @@ func getLowPricedChair(c echo.Context) error {
 		c.Logger().Errorf("getLowPricedChair DB execution error : %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
-
+	lowPricedChairs = chairs
 	return c.JSON(http.StatusOK, ChairListResponse{Chairs: chairs})
 }
 
@@ -822,6 +845,7 @@ func postEstate(c echo.Context) error {
 		c.Logger().Errorf("failed to commit tx: %v", err)
 		return c.NoContent(http.StatusInternalServerError)
 	}
+	invalidationLowPricedEstates()
 	return c.NoContent(http.StatusCreated)
 }
 
@@ -940,7 +964,24 @@ func searchEstates(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
+var lowPricedEstates []Estate
+var lowPricedEstatesLock = new(sync.Mutex)
+
+func invalidationLowPricedEstates() {
+	lowPricedEstatesLock.Lock()
+	lowPricedEstates = nil
+	lowPricedEstatesLock.Unlock()
+}
+
 func getLowPricedEstate(c echo.Context) error {
+	if lowPricedEstates != nil || len(lowPricedEstates) > 0 {
+		return c.JSON(http.StatusOK, EstateListResponse{Estates: lowPricedEstates})
+	}
+	lowPricedEstatesLock.Lock()
+	defer lowPricedEstatesLock.Unlock()
+	if lowPricedEstates != nil || len(lowPricedEstates) > 0 {
+		return c.JSON(http.StatusOK, EstateListResponse{Estates: lowPricedEstates})
+	}
 	ctx := c.Request().Context()
 	estates := make([]Estate, 0, Limit)
 	query := `SELECT * FROM estate ORDER BY rent ASC, id ASC LIMIT ?`
@@ -954,6 +995,7 @@ func getLowPricedEstate(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
+	lowPricedEstates = estates
 	return c.JSON(http.StatusOK, EstateListResponse{Estates: estates})
 }
 
