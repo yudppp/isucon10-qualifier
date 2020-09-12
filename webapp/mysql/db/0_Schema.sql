@@ -52,4 +52,4 @@ CREATE TABLE isuumo.estate_features
     estate_id   INTEGER         NOT NULL,
     feature_id  INTEGER         NOT NULL
 );
-CREATE INDEX chair_features_fe ON isuumo.estate_features (feature_id, estate_id);
+CREATE INDEX estate_features_fe ON isuumo.estate_features (feature_id, estate_id);
