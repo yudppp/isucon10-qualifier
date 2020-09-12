@@ -12,12 +12,18 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/labstack/gommon/log"
+	"github.com/newrelic/go-agent/v3/integrations/nrecho-v3"
+	_ "github.com/newrelic/go-agent/v3/integrations/nrmysql"
+	"github.com/newrelic/go-agent/v3/newrelic"
+	"github.com/yudppp/isutools/profile"
+	"github.com/yudppp/isutools/utils/slackcat"
 )
 
 const Limit = 20
@@ -219,10 +225,14 @@ func getEnv(key, defaultValue string) string {
 //ConnectDB isuumoデータベースに接続する
 func (mc *MySQLConnectionEnv) ConnectDB() (*sqlx.DB, error) {
 	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v", mc.User, mc.Password, mc.Host, mc.Port, mc.DBName)
-	return sqlx.Open("mysql", dsn)
+	return sqlx.Open("nrmysql", dsn)
 }
 
 func init() {
+
+	slackcat.SetDefaultChannel("isucon")
+	slackcat.SetToken("xoxp-1367366204144-1340440759157-1352511763971-5a192bbdd0b08d4f0b137378441e75fe")
+
 	jsonText, err := ioutil.ReadFile("../fixture/chair_condition.json")
 	if err != nil {
 		fmt.Printf("%v\n", err)
@@ -239,12 +249,22 @@ func init() {
 }
 
 func main() {
+
+	app, err := newrelic.NewApplication(
+		newrelic.ConfigAppName("isucon7-qualifier"),
+		newrelic.ConfigLicense("66a9360acdf0399f0b249cdd9a6f517861a1NRAL"),
+		newrelic.ConfigDistributedTracerEnabled(true),
+	)
+	if err != nil {
+		panic(err)
+	}
 	// Echo instance
 	e := echo.New()
 	e.Debug = true
 	e.Logger.SetLevel(log.DEBUG)
 
 	// Middleware
+	e.Use(nrecho.Middleware(app))
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
@@ -271,7 +291,6 @@ func main() {
 
 	mySQLConnectionData = NewMySQLConnectionEnv()
 
-	var err error
 	db, err = mySQLConnectionData.ConnectDB()
 	if err != nil {
 		e.Logger.Fatalf("DB connection failed : %v", err)
@@ -285,6 +304,8 @@ func main() {
 }
 
 func initialize(c echo.Context) error {
+	profile.StartCPU(time.Second*75, true)
+
 	sqlDir := filepath.Join("..", "mysql", "db")
 	paths := []string{
 		filepath.Join(sqlDir, "0_Schema.sql"),
