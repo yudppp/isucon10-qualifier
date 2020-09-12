@@ -671,16 +671,15 @@ var lowPricedMaxPrice int64
 func invalidationLowPricedChairs() {
 	lowPricedChairsLock.Lock()
 	lowPricedChairs = nil
-	lowPricedMaxPrice = 0
 	lowPricedChairsLock.Unlock()
 }
 
-func invalidationLowPricedChairsFromPrice(price int64) {
-	if price > lowPricedMaxPrice {
-		return
-	}
-	invalidationLowPricedChairs()
-}
+// func invalidationLowPricedChairsFromPrice(price int64) {
+// 	if price > lowPricedMaxPrice {
+// 		return
+// 	}
+// 	invalidationLowPricedChairs()
+// }
 
 func getLowPricedChair(c echo.Context) error {
 	if lowPricedChairs != nil || len(lowPricedChairs) > 0 {
@@ -1059,19 +1058,23 @@ func searchEstateNazotte(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	estateIDs := make([]interface{}, len(estatesInBoundingBox))
-	for i, estate := range estatesInBoundingBox {
-		estateIDs[i] = estate.ID
-	}
-
 	estatesInPolygon := []Estate{}
+	for _, estate := range estatesInBoundingBox {
+		validatedEstate := Estate{}
 
-	query = fmt.Sprintf(
-		`SELECT * FROM estate WHERE id IN (%s) AND ST_Contains(ST_PolygonFromText(%s), geo) ORDER BY popularity LIMIT 50`,
-		strings.TrimSuffix(strings.Repeat("?,", len(estateIDs)), ","),
-		coordinates.coordinatesToText(),
-	)
-	err = db.SelectContext(ctx, &estatesInPolygon, query, estateIDs...)
+		query := fmt.Sprintf(`SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), geo)`, coordinates.coordinatesToText())
+		err = db.GetContext(ctx, &validatedEstate, query, estate.ID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				continue
+			} else {
+				c.Echo().Logger.Errorf("db access is failed on executing validate if estate is in polygon : %v", err)
+				return c.NoContent(http.StatusInternalServerError)
+			}
+		} else {
+			estatesInPolygon = append(estatesInPolygon, validatedEstate)
+		}
+	}
 
 	var re EstateSearchResponse
 	re.Estates = []Estate{}
