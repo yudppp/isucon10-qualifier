@@ -941,7 +941,7 @@ func searchEstates(c echo.Context) error {
 	var res EstateSearchResponse
 	err = db.GetContext(ctx, &res.Count, countQuery+searchCondition, params...)
 	if err != nil {
-		c.Logger().Errorf("searchEstates DB execution error : %v", err)
+		c.Logger().Errorf("searchEstates DB execution error : %v: %v: %v", err, countQuery+searchCondition, params)
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
