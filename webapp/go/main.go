@@ -334,6 +334,9 @@ func initialize(c echo.Context) error {
 		}
 	}
 
+	invalidationLowPricedEstates()
+	invalidationLowPricedChairs()
+
 	return c.JSON(http.StatusOK, InitializeResponse{
 		Language: "go",
 	})
@@ -361,8 +364,6 @@ func getChairDetail(c echo.Context) error {
 		c.Echo().Logger.Infof("requested id's chair is sold out : %v", id)
 		return c.NoContent(http.StatusNotFound)
 	}
-	invalidationLowPricedEstates()
-	invalidationLowPricedChairs()
 
 	return c.JSON(http.StatusOK, chair)
 }
@@ -665,11 +666,20 @@ func getChairSearchCondition(c echo.Context) error {
 
 var lowPricedChairs []Chair
 var lowPricedChairsLock = new(sync.Mutex)
+var lowPricedMaxPrice int64
 
 func invalidationLowPricedChairs() {
 	lowPricedChairsLock.Lock()
 	lowPricedChairs = nil
+	lowPricedMaxPrice = 0
 	lowPricedChairsLock.Unlock()
+}
+
+func invalidationLowPricedChairsFromPrice(price int64) {
+	if price > lowPricedMaxPrice {
+		return
+	}
+	invalidationLowPricedChairs()
 }
 
 func getLowPricedChair(c echo.Context) error {
@@ -694,6 +704,7 @@ func getLowPricedChair(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 	lowPricedChairs = chairs
+	lowPricedMaxPrice = chairs[len(chairs)-1].Price
 	return c.JSON(http.StatusOK, ChairListResponse{Chairs: chairs})
 }
 
@@ -790,11 +801,7 @@ func postEstate(c echo.Context) error {
 			address,
 			latitude,
 			longitude,
-<<<<<<< Updated upstream
 			fmt.Sprintf("POINT(%f %f)", latitude, longitude),
-=======
-			fmt.Sprintf("ST_GeomFromText('POINT(%f %f)')", latitude, longitude),
->>>>>>> Stashed changes
 			rent,
 			doorHeight,
 			doorWidth,
@@ -1052,23 +1059,19 @@ func searchEstateNazotte(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	estatesInPolygon := []Estate{}
-	for _, estate := range estatesInBoundingBox {
-		validatedEstate := Estate{}
-
-		query := fmt.Sprintf(`SELECT * FROM estate WHERE id = ? AND ST_Contains(ST_PolygonFromText(%s), geo)`, coordinates.coordinatesToText())
-		err = db.GetContext(ctx, &validatedEstate, query, estate.ID)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				continue
-			} else {
-				c.Echo().Logger.Errorf("db access is failed on executing validate if estate is in polygon : %v", err)
-				return c.NoContent(http.StatusInternalServerError)
-			}
-		} else {
-			estatesInPolygon = append(estatesInPolygon, validatedEstate)
-		}
+	estateIDs := make([]interface{}, len(estatesInBoundingBox))
+	for i, estate := range estatesInBoundingBox {
+		estateIDs[i] = estate.ID
 	}
+
+	estatesInPolygon := []Estate{}
+
+	query = fmt.Sprintf(
+		`SELECT * FROM estate WHERE id IN (%s) AND ST_Contains(ST_PolygonFromText(%s), geo) ORDER BY popularity LIMIT 50`,
+		strings.TrimSuffix(strings.Repeat("?,", len(estateIDs)), ","),
+		coordinates.coordinatesToText(),
+	)
+	err = db.SelectContext(ctx, &estatesInPolygon, query, estateIDs...)
 
 	var re EstateSearchResponse
 	re.Estates = []Estate{}
