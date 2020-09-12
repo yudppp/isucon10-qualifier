@@ -43,11 +43,11 @@ CREATE TABLE isuumo.chair_features
     chair_id    INTEGER         NOT NULL,
     feature_id  INTEGER         NOT NULL
 );
-CREATE INDEX chair_features_fc ON chair_features (feature_id, chair_id);
+CREATE INDEX chair_features_fc ON isuumo.chair_features (feature_id, chair_id);
 
 CREATE TABLE isuumo.estate_features
 (
     estate_id   INTEGER         NOT NULL,
     feature_id  INTEGER         NOT NULL
 );
-CREATE INDEX chair_features_fe ON estate_features (feature_id, estate_id);
+CREATE INDEX chair_features_fe ON isuumo.estate_features (feature_id, estate_id);
