@@ -606,7 +606,51 @@ func searchChairs(c echo.Context) error {
 	return c.JSON(http.StatusOK, res)
 }
 
-var buyLock = new(sync.Mutex)
+
+type keyMutex struct {
+    localLockMap map[int64]*sync.Mutex
+    globalLock   sync.Mutex
+}
+
+func NewKeyMutex() *keyMutex {
+    return &keyMutex{localLockMap: map[int64]*sync.Mutex{}}
+}
+
+func (km *keyMutex) Lock(key int64) {
+    km.globalLock.Lock()
+
+    wl, ok := km.localLockMap[key]
+
+    if !ok {
+        wl = &sync.Mutex{}
+        km.localLockMap[key] = wl
+    }
+
+    km.globalLock.Unlock()
+
+    wl.Lock()
+}
+
+func (km *keyMutex) Unlock(key int64) {
+    km.globalLock.Lock()
+
+    wl, ok := km.localLockMap[key]
+
+    if !ok {
+        km.globalLock.Unlock()
+        return
+    }
+
+    delete(km.localLockMap, key)
+
+    km.globalLock.Unlock()
+
+    wl.Unlock()
+}
+
+var buyChairMutex = kmutex.NewKeyMutex()
+
+
 
 func buyChair(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -636,8 +680,8 @@ func buyChair(c echo.Context) error {
 	defer tx.Rollback()
 
 	var chair Chair
-	buyLock.Lock()
-	defer buyLock.Unlock()
+	buyChairMutex.Lock(id)
+	defer buyChairMutex.Unlock(id)
 	err = tx.QueryRowxContext(ctx, "SELECT * FROM chair WHERE id = ? AND stock > 0", id).StructScan(&chair)
 	if err != nil {
 		if err == sql.ErrNoRows {
