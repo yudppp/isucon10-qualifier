@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -33,6 +34,19 @@ var db *sqlx.DB
 var mySQLConnectionData *MySQLConnectionEnv
 var chairSearchCondition ChairSearchCondition
 var estateSearchCondition EstateSearchCondition
+
+var botUaRegexes = []*regexp.Regexp{
+	regexp.MustCompile(`/ISUCONbot(-Mobile)?/`),
+	regexp.MustCompile(`/ISUCONbot-Image//`),
+	regexp.MustCompile(`/Mediapartners-ISUCON/`),
+	regexp.MustCompile(`/ISUCONCoffee/`),
+	regexp.MustCompile(`/ISUCONFeedSeeker(Beta)?/`),
+	regexp.MustCompile(`/crawler \(https://isucon\.invalid/(support/faq/|help/jp/)/`),
+	regexp.MustCompile(`/isubot/`),
+	regexp.MustCompile(`/Isupider/`),
+	regexp.MustCompile(`/Isupider(-image)?\+/`),
+	regexp.MustCompile(`/(bot|crawler|spider)(?:[-_ .\/;@()]|$)/i`),
+}
 
 type InitializeResponse struct {
 	Language string `json:"language"`
@@ -248,6 +262,27 @@ func init() {
 	json.Unmarshal(jsonText, &estateSearchCondition)
 }
 
+func excludeBotRequestsHandler() echo.MiddlewareFunc {
+	return func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+		return func(ctx echo.Context) error {
+			ua := ctx.Request().UserAgent()
+			ch := make(chan bool, len(botUaRegexes))
+			defer close(ch)
+			for _, _rgx := range botUaRegexes {
+				go func(rgx *regexp.Regexp) {
+					ch <- rgx.MatchString(ua)
+				}(_rgx)
+			}
+			for c := range ch {
+				if c {
+					return fmt.Errorf("request by bot: %s", ua)
+				}
+			}
+			return nil
+		}
+	}
+}
+
 func main() {
 
 	app, err := newrelic.NewApplication(
@@ -267,6 +302,9 @@ func main() {
 	e.Use(nrecho.Middleware(app))
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+
+	// exclude bot's requests
+	e.Use(excludeBotRequestsHandler())
 
 	// Initialize
 	e.POST("/initialize", initialize)
