@@ -54,6 +54,9 @@ type Chair struct {
 	Kind        string `db:"kind" json:"kind"`
 	Popularity  int64  `db:"popularity" json:"-"`
 	Stock       int64  `db:"stock" json:"-"`
+
+	ChairID   int64 `db:"chair_id" json:"-"`
+	FeatureID int64 `db:"chair_id" json:"-"`
 }
 
 type ChairSearchResponse struct {
@@ -80,6 +83,9 @@ type Estate struct {
 	DoorWidth   int64       `db:"door_width" json:"doorWidth"`
 	Features    string      `db:"features" json:"features"`
 	Popularity  int64       `db:"popularity" json:"-"`
+
+	EstateID  int64 `db:"estate_id" json:"-"`
+	FeatureID int64 `db:"chair_id" json:"-"`
 }
 
 //EstateSearchResponse estate/searchへのレスポンスの形式
