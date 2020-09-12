@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -23,8 +22,6 @@ import (
 	"github.com/newrelic/go-agent/v3/integrations/nrecho-v3"
 	_ "github.com/newrelic/go-agent/v3/integrations/nrmysql"
 	"github.com/newrelic/go-agent/v3/newrelic"
-	"github.com/yudppp/isutools/profile"
-	"github.com/yudppp/isutools/utils/slackcat"
 )
 
 const Limit = 20
@@ -237,10 +234,6 @@ func (mc *MySQLConnectionEnv) ConnectDB() (*sqlx.DB, error) {
 }
 
 func init() {
-
-	slackcat.SetDefaultChannel("isucon")
-	slackcat.SetToken("xoxp-1367366204144-1340440759157-1352511763971-5a192bbdd0b08d4f0b137378441e75fe")
-
 	jsonText, err := ioutil.ReadFile("../fixture/chair_condition.json")
 	if err != nil {
 		fmt.Printf("%v\n", err)
@@ -316,8 +309,6 @@ func main() {
 }
 
 func initialize(c echo.Context) error {
-	profile.StartCPU(time.Second*75, true)
-
 	sqlDir := filepath.Join("..", "mysql", "db")
 	paths := []string{
 		filepath.Join(sqlDir, "0_Schema.sql"),
