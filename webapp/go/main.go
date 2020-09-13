@@ -689,7 +689,7 @@ func buyChair(c echo.Context) error {
 		return c.NoContent(http.StatusInternalServerError)
 	}
 
-	invalidationLowPricedChairs()
+	invalidationLowPricedChairsFromPrice(chair.Price)
 
 	return c.NoContent(http.StatusOK)
 }
