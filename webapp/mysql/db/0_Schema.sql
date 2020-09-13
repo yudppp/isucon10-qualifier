@@ -55,8 +55,3 @@ CREATE TABLE isuumo.estate_features
 CREATE UNIQUE INDEX estate_features_fe ON isuumo.estate_features (feature_id, estate_id);
 
 CREATE INDEX estate_door_heightx_door_width ON isuumo.estate (door_height, door_width);
-
-ALTER TABLE isuumo.estate ADD geo GEOMETRY;
-UPDATE isuumo.estate SET estate.`geo` = GeomFromText(Concat('POINT(',estate.latitude,' ',estate.longitude,')'));
-ALTER TABLE isuumo.estate MODIFY geo GEOMETRY NOT NULL;
-CREATE SPATIAL INDEX estate_door ON isuumo.estate (geo);
