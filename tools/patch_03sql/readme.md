@@ -1,1 +1,0 @@
-go run main.go  > ../../webapp/mysql/db/1_DummyEstateData.sql
